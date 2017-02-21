@@ -107,86 +107,16 @@ class Motor {
 }
 
 
-void Single()
-{
-  if (dart_state==LOW && last_scan == LOW && first_scan == HIGH && dart_count == 0)
-  {
-  analogWrite(feedbelt,feed_speed);
-  last_scan=LOW;
-  }
-  if (dart_state==HIGH && last_scan == LOW && first_scan == HIGH)
-  {
-    dart_count ++;
-    last_scan =HIGH;
-  }
-  if (dart_state==HIGH && last_scan == LOW && first_scan == LOW)
-  {
-    analogWrite(feedbelt,feed_speed);
-    last_scan =HIGH;
-  }
-  if (dart_state==LOW && last_scan == HIGH && first_scan == LOW)
-  {
-    dart_count ++;
-  }
-  if (dart_state==LOW && last_scan == LOW && first_scan == LOW)
-  {
-    first_scan=HIGH;
-  }
-  
-  if (dart_count >= 1)
-  { 
-    digitalWrite(feedbelt,LOW);
-  }
-  
-  if (Trigger_state==LOW )
-  {
-    dart_count=0;
-  }
-}
-
-/// @TODO Extend to 
-
-void three()
-{
-  
-  if (dart_state==LOW && dart_count < 2 )
-  {
-  analogWrite(feedbelt,feed_speed_three);
-  last_scan=LOW;
-  }
-  if (dart_state==HIGH && last_scan == LOW && dart_count >0)
-  {
-    dart_count ++;
-    last_scan =HIGH;
-  }
-  if (dart_state==HIGH && last_scan == LOW)
-  {
-    analogWrite(feedbelt,feed_speed_three);
-    last_scan =HIGH;
-    dart_count ++;
-  }
-    
-    if (dart_count >= 2)
-   { 
-    digitalWrite(feedbelt,LOW);
-   }
-    
-    if (Trigger_state==LOW )
-    {
-      dart_count=0;
-    }
-}
-  
-status_t full_auto(Momentary *Trigger) {
-  digitalWrite(feedbelt,HIGH);
+void full_auto(Momentary *Trigger, Motor *Feedbelt, uint_fast8_t speed) {
+  Feedbelt::Update(speed);
   while (Trigger::state == 1){
       Trigger::Update();
   }
+  Feedbelt::Update(0);
 }
 
 
 status_t fire(Momentary *Dart, Momentary *Trigger, Motor *Feedbelt, uint_fast8_t num, uint_fast8_t speed){
-    ++num;
     Feedbelt::Update(speed);
     while(--num){
         while(Dart::state == 1 || Trigger::state == 1){
@@ -200,6 +130,7 @@ status_t fire(Momentary *Dart, Momentary *Trigger, Motor *Feedbelt, uint_fast8_t
         }
         if (Trigger::state == 0) return kFail;
     }
+    Feedbelt::Update(0);
     return kSuccess;
 }
 
@@ -243,35 +174,26 @@ void setup()
 
 void loop() 
 {
-  Trigger_state = digitalRead(triger);
-  Rev_state =digitalRead(rev);
-  slector_up_state =digitalRead(slector_up);
-  slector_down_state =digitalRead(slector_down);
-  dart_state= digitalRead(dart);
+  Trigger::Update();
+  Rev::Update();
+  Selector::Update();
 
-   if (Rev_state==HIGH) {
-    digitalWrite(flywheel,HIGH);
+   if (Rev::state == 1) {
+    Flywheel::Update(255);
   }
     else {
-    digitalWrite(flywheel,LOW); 
+    Flywheel::Update(0);
   }
     
-  if (Trigger_state==HIGH && Rev_state==HIGH ){
-    if (slector_up_state==LOW){
-      Single();
+  if (Trigger::State == 1 && Rev::state == 1 ){
+    if (Selector::state == single){
+      fire(&Dart, &Trigger, &Feedbelt, 1, 255)
     }
-    else if (slector_down_state==LOW){
-      three();
+    else if (Selector::state == single){
+      fire(&Dart, &Trigger, &Feedbelt, 1, 255)
     }
     else {
-      Auto();
+      full_auto(&Trigger, &Feedbelt, 255);
     }
   }
-  else
-  {
-   digitalWrite(feedbelt,LOW);
-    dart_count=0;
-   last_scan =LOW;
-   first_scan = LOW; 
-  }  
 }
