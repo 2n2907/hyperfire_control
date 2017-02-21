@@ -1,20 +1,6 @@
 #include <stdint.h>
 
-int triger = 7;
-int rev = 8;
-int clip = 4;
-int door = 3;
-int flywheel = 6;
-int feedbelt = 5;
-int dart =9;
-int slector_up= 10;
-int slector_down= 11;
-int led=2;
-int ledcount=0;
-boolean last_scan;
 int dart_count;
-int feed_speed_three = 225;
-int feed_speed = 125;
 
 boolean Trigger_state;
 boolean Rev_state;
@@ -22,9 +8,9 @@ boolean dart_state;
 boolean first_scan;
 
 typedef enum _three_state{
-    single,
-    full,
-    burst
+    kTop,
+    kBottom,
+    kMiddle
 }three_state_t;
 
 typedef enum _status_t{
@@ -76,11 +62,11 @@ class ThreeWay {
     private:
     void StateChk(){
         if (digitalRead(pin1) == LOW){
-            state = single;
+            state = kTop;
         } else if(digitalRead(pin2) == LOW){
-            state = burst;
+            state = kBottom;
         } else {
-            state = full;
+            state = kMiddle;
         }
     }
 }
@@ -187,10 +173,10 @@ void loop()
   }
     
   if (Trigger::State == 1 && Rev::state == 1 ){
-    if (Selector::state == single){
+    if (Selector::state == kTop){
       fire(&Dart, &Trigger, &Feedbelt, 1, 255)
     }
-    else if (Selector::state == single){
+    else if (Selector::state == kBottom){
       fire(&Dart, &Trigger, &Feedbelt, 1, 255)
     }
     else {
