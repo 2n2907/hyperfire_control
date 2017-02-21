@@ -117,6 +117,7 @@ void full_auto(Momentary *Trigger, Motor *Feedbelt, uint_fast8_t speed) {
 
 
 status_t fire(Momentary *Dart, Momentary *Trigger, Motor *Feedbelt, uint_fast8_t num, uint_fast8_t speed){
+    ++num;
     Feedbelt::Update(speed);
     while(--num){
         while(Dart::state == 1 || Trigger::state == 1){
